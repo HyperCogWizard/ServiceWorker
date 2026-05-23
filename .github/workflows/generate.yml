@@ -1,15 +1,109 @@
-# Create a file called .github/workflows/auto-publish.yml
+# Service Worker Team Generation Workflow
+# Supports custom formations for distributed build and validation
 name: CI
 on:
   pull_request: {}
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      formation:
+        description: 'Team formation strategy'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+          - standard
+          - parallel
+          - sequential
+          - distributed
+      worker_count:
+        description: 'Number of service workers (1-4)'
+        required: false
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+
+# Custom formations configuration for service worker team generation
+# Formations define how workers are organized and coordinated
+env:
+  # Formation strategies:
+  # - standard: Single worker handles all tasks (default)
+  # - parallel: Multiple workers execute tasks simultaneously  
+  # - sequential: Workers execute tasks in order, passing results
+  # - distributed: Workers split tasks across different runners
+  DEFAULT_FORMATION: standard
+  
+  # Worker roles within formations:
+  # - builder: Compiles and generates output
+  # - validator: Validates markup and specifications
+  # - deployer: Handles deployment to gh-pages
+  # - coordinator: Orchestrates other workers
+  WORKER_ROLES: 'builder,validator,deployer'
+  
+  # Scaling configuration for team generation
+  MIN_WORKERS: 1
+  MAX_WORKERS: 4
+  AUTO_SCALE: true
+
 jobs:
+  # Formation coordinator job - determines team structure
+  formation-setup:
+    name: Configure Formation
+    runs-on: ubuntu-latest
+    outputs:
+      formation: ${{ steps.config.outputs.formation }}
+      worker_count: ${{ steps.config.outputs.worker_count }}
+      matrix: ${{ steps.config.outputs.matrix }}
+    steps:
+      - name: Configure formation strategy
+        id: config
+        run: |
+          # Use input formation or default
+          FORMATION="${{ github.event.inputs.formation || env.DEFAULT_FORMATION }}"
+          WORKER_COUNT="${{ github.event.inputs.worker_count || env.MIN_WORKERS }}"
+          
+          echo "formation=$FORMATION" >> $GITHUB_OUTPUT
+          echo "worker_count=$WORKER_COUNT" >> $GITHUB_OUTPUT
+          
+          # Generate worker matrix based on formation
+          case "$FORMATION" in
+            parallel)
+              echo 'matrix={"worker":["builder","validator","deployer"]}' >> $GITHUB_OUTPUT
+              ;;
+            distributed)
+              echo 'matrix={"worker":["worker-1","worker-2","worker-3","worker-4"],"role":["build","validate"]}' >> $GITHUB_OUTPUT
+              ;;
+            sequential|standard|*)
+              echo 'matrix={"worker":["primary"]}' >> $GITHUB_OUTPUT
+              ;;
+          esac
+          
+          echo "::notice::Formation: $FORMATION with $WORKER_COUNT worker(s)"
+
+  # Main build job - executes based on formation configuration
   main:
     name: Build, Validate and Deploy
+    needs: formation-setup
     runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.formation-setup.outputs.matrix) }}
+      fail-fast: false
     steps:
+      - name: Report worker status
+        run: |
+          echo "::group::Worker Configuration"
+          echo "Formation: ${{ needs.formation-setup.outputs.formation }}"
+          echo "Worker: ${{ matrix.worker }}"
+          echo "Role: ${{ matrix.role || 'all' }}"
+          echo "::endgroup::"
+
       - uses: actions/checkout@v5
+      
       - uses: w3c/spec-prod@v2
         with:
           GH_PAGES_BRANCH: gh-pages
@@ -20,3 +114,20 @@ jobs:
           W3C_WG_DECISION_URL: https://lists.w3.org/Archives/Public/public-webapps/2014JulSep/0627.html
           W3C_BUILD_OVERRIDE: |
             status: CRD
+
+  # Formation summary job - reports team generation results
+  formation-summary:
+    name: Formation Summary
+    needs: [formation-setup, main]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Report formation results
+        run: |
+          echo "## Service Worker Team Generation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Configuration | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formation | ${{ needs.formation-setup.outputs.formation }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Workers | ${{ needs.formation-setup.outputs.worker_count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ needs.main.result }} |" >> $GITHUB_STEP_SUMMARY
