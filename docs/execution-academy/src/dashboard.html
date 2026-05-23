@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Execution Academy Dashboard</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --text-primary: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-yellow: #d29922;
+      --accent-red: #f85149;
+      --accent-purple: #a371f7;
+      --border-color: #30363d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .dashboard {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px 0 40px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--text-secondary);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header .icon {
+      font-size: 1.5rem;
+    }
+
+    .card-header h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* Department/Realm Visualization */
+    .departments {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .department {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .department-name {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent-blue);
+    }
+
+    .role {
+      background: var(--bg-primary);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 5px 0;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role .status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .role .status.idle {
+      background: var(--text-secondary);
+    }
+
+    .role .status.busy {
+      background: var(--accent-yellow);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Skill Tree */
+    .skill-tree {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .skill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+
+    .skill-stars {
+      color: var(--accent-yellow);
+    }
+
+    .skill-stars .empty {
+      opacity: 0.3;
+    }
+
+    .skill-locked {
+      opacity: 0.5;
+    }
+
+    /* Task Board */
+    .task-board {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task {
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .task-priority {
+      width: 4px;
+      height: 100%;
+      min-height: 30px;
+      border-radius: 2px;
+    }
+
+    .task-priority.critical { background: var(--accent-red); }
+    .task-priority.high { background: var(--accent-yellow); }
+    .task-priority.normal { background: var(--accent-blue); }
+    .task-priority.low { background: var(--text-secondary); }
+
+    .task-content {
+      flex: 1;
+    }
+
+    .task-type {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .task-description {
+      font-size: 0.9rem;
+    }
+
+    /* Explanation Panel */
+    .explanation-panel {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .explanation-section {
+      margin-bottom: 15px;
+    }
+
+    .explanation-section h4 {
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .explanation-factor {
+      display: flex;
+      gap: 10px;
+      padding: 4px 0;
+    }
+
+    .explanation-factor::before {
+      content: '├──';
+      color: var(--text-secondary);
+    }
+
+    .explanation-factor:last-child::before {
+      content: '└──';
+    }
+
+    /* Niche Constructor */
+    .niche-phases {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .phase {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .phase-number {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-purple);
+      border-radius: 50%;
+      font-weight: 600;
+    }
+
+    .phase-content {
+      flex: 1;
+    }
+
+    .phase-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .phase-stats {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .metric {
+      text-align: center;
+      padding: 15px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 5px;
+    }
+
+    /* Confidence Bar */
+    .confidence-bar {
+      height: 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Suggestions */
+    .suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .suggestion {
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-purple);
+    }
+
+    .suggestion.high {
+      border-left-color: var(--accent-red);
+    }
+
+    .suggestion.medium {
+      border-left-color: var(--accent-yellow);
+    }
+
+    .suggestion-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .suggestion-type {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--accent-purple);
+    }
+
+    .suggestion-priority {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--bg-primary);
+    }
+
+    .suggestion-message {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Knowledge Sharing */
+    .sharing-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .sharing-table th,
+    .sharing-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sharing-table th {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    .access-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      background: var(--bg-primary);
+    }
+
+    .access-badge.rw { color: var(--accent-green); }
+    .access-badge.r { color: var(--accent-blue); }
+    .access-badge.clone { color: var(--accent-yellow); }
+    .access-badge.transfer { color: var(--accent-purple); }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: var(--bg-primary);
+      border-color: var(--accent-blue);
+    }
+
+    button.primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    button.primary:hover {
+      opacity: 0.9;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      margin-top: 30px;
+    }
+
+    footer a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <header>
+      <h1>🎓 The Execution Academy</h1>
+      <p>ECMA-262 as a Neuro-Symbolic Training System</p>
+    </header>
+
+    <!-- Metrics Overview -->
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-value" id="metric-departments">3</div>
+          <div class="metric-label">Departments</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="metric-roles">12</div>
+          <div class="metric-label">Active Roles</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="metric-tasks">47</div>
+          <div class="metric-label">Tasks Completed</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="metric-confidence">97%</div>
+          <div class="metric-label">Avg. Confidence</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Departments (Realms) -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🏢</span>
+          <h2>Departments (Realms)</h2>
+        </div>
+        <div class="departments">
+          <div class="department">
+            <div class="department-name">Department A</div>
+            <div class="role">
+              <span class="status busy"></span>
+              <span>Global Coordinator</span>
+            </div>
+            <div class="role">
+              <span class="status"></span>
+              <span>Event Handler</span>
+            </div>
+            <div class="role">
+              <span class="status idle"></span>
+              <span>UI Renderer</span>
+            </div>
+          </div>
+          <div class="department">
+            <div class="department-name">Department B</div>
+            <div class="role">
+              <span class="status"></span>
+              <span>API Handler</span>
+            </div>
+            <div class="role">
+              <span class="status busy"></span>
+              <span>Fetch Specialist</span>
+            </div>
+          </div>
+          <div class="department">
+            <div class="department-name">Department C</div>
+            <div class="role">
+              <span class="status"></span>
+              <span>Data Transform</span>
+            </div>
+            <div class="role">
+              <span class="status"></span>
+              <span>Cache Manager</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill Tree -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🌳</span>
+          <h2>Fetch Specialist Skill Tree</h2>
+        </div>
+        <div class="skill-tree">
+          <div class="skill">
+            <span>└── FETCH (Base)</span>
+            <span class="skill-stars">★★★★★</span>
+          </div>
+          <div class="skill" style="padding-left: 20px;">
+            <span>├── CACHE-FIRST</span>
+            <span class="skill-stars">★★★★<span class="empty">☆</span></span>
+          </div>
+          <div class="skill" style="padding-left: 40px;">
+            <span>└── PREDICTIVE-PREFETCH</span>
+            <span class="skill-stars">★<span class="empty">☆☆☆☆</span></span>
+          </div>
+          <div class="skill" style="padding-left: 20px;">
+            <span>├── NETWORK-FIRST</span>
+            <span class="skill-stars">★★★<span class="empty">☆☆</span></span>
+          </div>
+          <div class="skill" style="padding-left: 40px;">
+            <span>└── ADAPTIVE-TIMEOUT</span>
+            <span class="skill-stars">★★★<span class="empty">☆☆</span></span>
+          </div>
+          <div class="skill" style="padding-left: 20px;">
+            <span>└── STALE-WHILE-REVALIDATE</span>
+            <span class="skill-stars">★★<span class="empty">☆☆☆</span></span>
+          </div>
+        </div>
+        <div class="controls">
+          <button>View All Trees</button>
+          <button class="primary">Train Skills</button>
+        </div>
+      </div>
+
+      <!-- Task Board -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">📋</span>
+          <h2>Task Board (Job Queue)</h2>
+        </div>
+        <div class="task-board">
+          <div class="task">
+            <div class="task-priority critical"></div>
+            <div class="task-content">
+              <div class="task-type">fetch</div>
+              <div class="task-description">GET /api/users (cache miss)</div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="task-priority high"></div>
+            <div class="task-content">
+              <div class="task-type">cache</div>
+              <div class="task-description">Update manifest v2.3.1</div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="task-priority normal"></div>
+            <div class="task-content">
+              <div class="task-type">sync</div>
+              <div class="task-description">Background sync pending</div>
+            </div>
+          </div>
+          <div class="task">
+            <div class="task-priority low"></div>
+            <div class="task-content">
+              <div class="task-type">cleanup</div>
+              <div class="task-description">Prune stale cache entries</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explanation Panel -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🔍</span>
+          <h2>Execution Explanation Panel</h2>
+        </div>
+        <div class="explanation-panel">
+          <div class="explanation-section">
+            <h4>📖 Current Operation: fetch('/api/users')</h4>
+            <p>The UI Renderer asked the Event Coordinator for user data. The Event Coordinator delegated to the Fetch Specialist, who noticed this endpoint was requested 47 times today.</p>
+          </div>
+          <div class="explanation-section">
+            <h4>🧠 Decision Factors</h4>
+            <div class="explanation-factor">Cache hit rate: 94%</div>
+            <div class="explanation-factor">Data freshness: 3s (tolerance: 30s)</div>
+            <div class="explanation-factor">Network conditions: Good</div>
+            <div class="explanation-factor">Context: Browsing (non-critical)</div>
+          </div>
+          <div class="explanation-section">
+            <h4>📊 Confidence</h4>
+            <div>97% (based on 847 similar decisions)</div>
+            <div class="confidence-bar">
+              <div class="confidence-fill" style="width: 97%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Niche Constructor -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🔧</span>
+          <h2>Niche Construction Engine</h2>
+        </div>
+        <div class="niche-phases">
+          <div class="phase">
+            <div class="phase-number">1</div>
+            <div class="phase-content">
+              <div class="phase-name">Observation</div>
+              <div class="phase-stats">1,247 observations • 23 patterns detected</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-number">2</div>
+            <div class="phase-content">
+              <div class="phase-name">Hypothesis Generation</div>
+              <div class="phase-stats">8 hypotheses • 3 ready for testing</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-number">3</div>
+            <div class="phase-content">
+              <div class="phase-name">Safe Experimentation</div>
+              <div class="phase-stats">2 running • 12 completed</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-number">4</div>
+            <div class="phase-content">
+              <div class="phase-name">Integration</div>
+              <div class="phase-stats">7 optimizations active</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-number">5</div>
+            <div class="phase-content">
+              <div class="phase-name">Environmental Modification</div>
+              <div class="phase-stats">15 scope reshapes • 3 priority adjustments</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adaptation Suggestions -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">💡</span>
+          <h2>Adaptation Suggestions</h2>
+        </div>
+        <div class="suggestions">
+          <div class="suggestion high">
+            <div class="suggestion-header">
+              <span class="suggestion-type">pattern-detected</span>
+              <span class="suggestion-priority">HIGH</span>
+            </div>
+            <div class="suggestion-message">
+              fetch('/api/users') operations account for 52% of recent activity. 
+              Consider creating a FastPath optimization.
+            </div>
+          </div>
+          <div class="suggestion medium">
+            <div class="suggestion-header">
+              <span class="suggestion-type">integration-ready</span>
+              <span class="suggestion-priority">MEDIUM</span>
+            </div>
+            <div class="suggestion-message">
+              Validated optimization "Cache-First for static assets" ready for integration. 
+              Expected improvement: 23%.
+            </div>
+          </div>
+          <div class="suggestion">
+            <div class="suggestion-header">
+              <span class="suggestion-type">skill-unlock</span>
+              <span class="suggestion-priority">LOW</span>
+            </div>
+            <div class="suggestion-message">
+              2 skills are still locked in Cache Manager tree. 
+              Focus on prerequisite skills to unlock new capabilities.
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button>Dismiss All</button>
+          <button class="primary">Apply Suggestions</button>
+        </div>
+      </div>
+
+      <!-- Knowledge Sharing -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🤝</span>
+          <h2>Knowledge Sharing Agreement</h2>
+        </div>
+        <p style="margin-bottom: 15px; color: var(--text-secondary);">
+          ServiceWorker "Cache Manager" ↔ Window "UI Render"
+        </p>
+        <table class="sharing-table">
+          <thead>
+            <tr>
+              <th>Data Element</th>
+              <th>Access</th>
+              <th>Sync Strategy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>user.profile</td>
+              <td><span class="access-badge rw">R/W</span></td>
+              <td>Immediate (hot)</td>
+            </tr>
+            <tr>
+              <td>cache.manifest</td>
+              <td><span class="access-badge r">R only</span></td>
+              <td>Batch (every 5s)</td>
+            </tr>
+            <tr>
+              <td>api.responses</td>
+              <td><span class="access-badge clone">Clone</span></td>
+              <td>Deep copy</td>
+            </tr>
+            <tr>
+              <td>stream.chunks</td>
+              <td><span class="access-badge transfer">Transfer</span></td>
+              <td>Zero-copy</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Commitment Chain -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🔗</span>
+          <h2>Commitment Chain (Promise)</h2>
+        </div>
+        <div class="explanation-panel">
+          <div class="skill">
+            <span>📋 COMMITMENT CHAIN</span>
+          </div>
+          <div class="skill" style="padding-left: 20px;">
+            <span>├── 🤝 "I will fetch data from /api/users"</span>
+          </div>
+          <div class="skill" style="padding-left: 40px; color: var(--accent-green);">
+            <span>└── Confidence: HIGH (network available)</span>
+          </div>
+          <div class="skill" style="padding-left: 40px; color: var(--text-secondary);">
+            <span>└── Fallback: Use cached version if network fails</span>
+          </div>
+          <div class="skill" style="padding-left: 20px;">
+            <span>├── 🔄 "When data arrives, I will parse it as JSON"</span>
+          </div>
+          <div class="skill" style="padding-left: 40px; color: var(--accent-yellow);">
+            <span>└── Confidence: MEDIUM (depends on format)</span>
+          </div>
+          <div class="skill" style="padding-left: 40px; color: var(--text-secondary);">
+            <span>└── Adaptation: Try XML, then plain text</span>
+          </div>
+          <div class="skill" style="padding-left: 20px;">
+            <span>└── ✨ "I will process the parsed data"</span>
+          </div>
+          <div class="skill" style="padding-left: 40px; color: var(--accent-blue);">
+            <span>└── Confidence: Variable (depends on data)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        Execution Academy Dashboard • Part of the 
+        <a href="https://github.com/w3c/ServiceWorker">W3C Service Workers Specification</a>
+      </p>
+      <p style="margin-top: 10px;">
+        Based on ECMA-262 execution model with neuro-symbolic adaptations
+      </p>
+    </footer>
+  </div>
+
+  <script type="module">
+    // Import the academy modules
+    import { ExecutionAcademy, Department, Role, Employee, Task } from './academy.js';
+    import ExplainableWorker from './explainable-worker.js';
+    import NicheConstructor from './niche-constructor.js';
+
+    // Initialize the academy
+    const academy = new ExecutionAcademy('Main Academy');
+
+    // Create departments
+    const deptA = academy.createDepartment('Department A');
+    const deptB = academy.createDepartment('Department B');
+    const deptC = academy.createDepartment('Department C');
+
+    // Create roles
+    const eventHandler = deptA.createRole('Event Handler', {
+      responsibilities: ['event-dispatch', 'event-coordination']
+    });
+    const uiRenderer = deptA.createRole('UI Renderer', {
+      responsibilities: ['dom-update', 'style-calculation']
+    });
+    const fetchSpecialist = deptB.createRole('Fetch Specialist', {
+      responsibilities: ['network-request', 'response-handling']
+    });
+    const cacheManager = deptC.createRole('Cache Manager', {
+      responsibilities: ['cache-read', 'cache-write', 'cache-invalidation']
+    });
+
+    // Initialize explainable worker
+    const explainable = new ExplainableWorker(academy);
+
+    // Initialize niche constructor
+    const niche = new NicheConstructor(academy);
+
+    // Example: Record a decision
+    const decision = explainable.recordDecision('op_001', 'fetch', {
+      requester: 'UI Renderer',
+      endpoint: '/api/users'
+    });
+
+    decision
+      .addFactor('Cache hit rate', '94%', 0.9)
+      .addFactor('Data freshness', '3s', 0.8)
+      .addFactor('Network conditions', 'Good', 0.7)
+      .addAlternative('Network-First', 'Rejected (cache freshness acceptable)')
+      .addAlternative('Stale-While-Revalidate', 'Considered but cache is fresh')
+      .choose('CACHE-FIRST', 0.97);
+
+    // Log for debugging
+    console.log('Academy initialized:', academy.explain());
+    console.log('Decision explanation:', explainable.getDecisionExplanation('op_001'));
+    console.log('Skill trees:', explainable.getAllSkillTrees());
+    console.log('Niche status:', niche.getStatus());
+
+    // Make objects available globally for console interaction
+    window.academy = academy;
+    window.explainable = explainable;
+    window.niche = niche;
+  </script>
+</body>
+</html>
